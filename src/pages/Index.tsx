@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Bot, UploadCloud, Database, FileText, ChevronRight } from "lucide-react";
+import { Send, Bot, UploadCloud, Database, FileText, ChevronRight, Search, X, Info, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ChatMessage from "@/components/ChatMessage";
 import UploadDocumentModal from "@/components/UploadDocumentModal";
@@ -36,6 +36,7 @@ const Index = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const { toast } = useToast();
+  const [showInfo, setShowInfo] = useState(false);
 
   const handleSendMessage = () => {
     if (input.trim() === "") return;
@@ -115,10 +116,26 @@ const Index = () => {
     }, 2000);
   };
 
+  const clearChat = () => {
+    toast({
+      title: "Chat cleared",
+      description: "All messages have been removed from the conversation.",
+    });
+    
+    setMessages([
+      {
+        id: 0,
+        content: "Hello! I'm your RAG-powered chatbot. I can answer questions based on the uploaded documents. Try uploading some documents and ask me about their content.",
+        isBot: true,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 py-4 px-6 shadow-sm sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 py-4 px-6 shadow-sm sticky top-0 z-10 backdrop-blur-sm bg-white/90">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-gradient-to-br from-rag-blue to-rag-dark-blue p-2 rounded-lg shadow-md">
@@ -143,22 +160,62 @@ const Index = () => {
               <UploadCloud className="h-4 w-4" />
               Upload Documents
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowInfo(!showInfo)}
+              className="text-gray-500 hover:text-rag-blue"
+            >
+              <Info className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
+
+      {/* Info panel - conditionally shown */}
+      {showInfo && (
+        <div className="bg-white border-b border-gray-200 py-3 px-6 shadow-inner animate-fade-in">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3">
+                <Sparkles className="h-5 w-5 text-rag-blue mt-1" />
+                <div>
+                  <h3 className="font-medium text-gray-900">How to use this RAG-powered chatbot</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    1. Upload documents using the "Upload Documents" button<br />
+                    2. Ask questions about the content of your documents<br />
+                    3. The system will retrieve relevant information and generate answers
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowInfo(false)} className="text-gray-500">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <main className="flex-grow max-w-6xl w-full mx-auto px-4 py-6 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
           {/* Chat area */}
-          <Card className="col-span-1 lg:col-span-3 flex flex-col h-[calc(100vh-12rem)] border-0 shadow-lg">
-            <CardHeader className="px-6 py-4 border-b bg-white">
+          <Card className="col-span-1 lg:col-span-3 flex flex-col h-[calc(100vh-12rem)] border-0 shadow-xl rounded-xl overflow-hidden">
+            <CardHeader className="px-6 py-4 border-b bg-white flex flex-row items-center justify-between">
               <CardTitle className="text-xl flex items-center">
                 <span className="bg-gradient-to-r from-rag-dark-blue to-rag-blue bg-clip-text text-transparent">Interactive Chat</span>
                 <Badge variant="outline" className="ml-3 px-2 py-0.5 text-xs bg-green-50 text-green-600 border-green-200">
                   Active
                 </Badge>
               </CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearChat}
+                className="text-gray-500 hover:text-red-500"
+              >
+                Clear chat
+              </Button>
             </CardHeader>
             <CardContent className="flex-grow p-0 overflow-hidden">
               <ScrollArea className="h-full p-6 bg-gray-50">
@@ -191,13 +248,13 @@ const Index = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder="Ask a question about your documents..."
-                  className="flex-1 border-gray-300 focus:border-rag-blue focus:ring-rag-blue/30"
+                  className="flex-1 border-gray-300 focus:border-rag-blue focus:ring-rag-blue/30 shadow-sm"
                   disabled={isLoading}
                 />
                 <Button 
                   onClick={handleSendMessage} 
                   disabled={input.trim() === "" || isLoading}
-                  className="bg-gradient-to-r from-rag-blue to-rag-dark-blue hover:from-rag-dark-blue hover:to-rag-dark-blue shadow-md"
+                  className="bg-gradient-to-r from-rag-blue to-rag-dark-blue hover:from-rag-dark-blue hover:to-rag-dark-blue shadow-md transition-all duration-300 ease-in-out transform hover:scale-105"
                 >
                   <Send className="h-4 w-4 mr-1" />
                   <span>Send</span>
@@ -208,7 +265,7 @@ const Index = () => {
 
           {/* Info sidebar */}
           <div className="col-span-1 space-y-6">
-            <Card className="border-0 shadow-lg overflow-hidden">
+            <Card className="border-0 shadow-lg overflow-hidden rounded-xl">
               <CardHeader className="px-6 py-4 bg-gradient-to-r from-rag-blue to-rag-dark-blue">
                 <CardTitle className="text-lg text-white">Knowledge Base</CardTitle>
               </CardHeader>
@@ -239,16 +296,41 @@ const Index = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full border-rag-blue/30 hover:bg-rag-blue/10 text-rag-blue flex items-center gap-2"
+                  className="w-full border-rag-blue/30 hover:bg-rag-blue/10 text-rag-blue flex items-center gap-2 group"
                   onClick={() => setShowUploadModal(true)}
                 >
-                  <UploadCloud className="h-4 w-4" />
+                  <UploadCloud className="h-4 w-4 group-hover:animate-bounce" />
                   Upload Documents
                 </Button>
               </CardFooter>
             </Card>
 
-            <Card className="border-0 shadow-lg overflow-hidden">
+            <Card className="border-0 shadow-lg overflow-hidden rounded-xl">
+              <CardHeader className="px-6 py-4 bg-gradient-to-r from-rag-blue to-rag-dark-blue">
+                <CardTitle className="text-lg text-white flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  Quick Search
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-6 py-4">
+                <div className="space-y-3">
+                  {["What is RAG?", "How does LangChain work?", "What is Python?"].map((question, i) => (
+                    <button 
+                      key={i}
+                      onClick={() => {
+                        setInput(question);
+                      }} 
+                      className="w-full text-left p-3 rounded-md border border-gray-200 text-sm font-medium hover:bg-gray-50 hover:border-rag-blue/30 transition-all flex items-center justify-between group"
+                    >
+                      <span className="text-gray-700">{question}</span>
+                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-rag-blue group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg overflow-hidden rounded-xl">
               <CardHeader className="px-6 py-4 bg-gradient-to-r from-rag-blue to-rag-dark-blue">
                 <CardTitle className="text-lg text-white">About SmartRAG</CardTitle>
               </CardHeader>
@@ -264,9 +346,9 @@ const Index = () => {
                     { name: "React", color: "bg-purple-100 text-purple-800 border-purple-200" },
                     { name: "Tailwind CSS", color: "bg-sky-100 text-sky-800 border-sky-200" }
                   ].map((tech, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
-                      <Badge variant="outline" className={`${tech.color}`}>
+                    <div key={i} className="flex items-center gap-2 group">
+                      <ChevronRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-rag-blue transition-colors" />
+                      <Badge variant="outline" className={`${tech.color} group-hover:scale-105 transition-transform`}>
                         {tech.name}
                       </Badge>
                     </div>

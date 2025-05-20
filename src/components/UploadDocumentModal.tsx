@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Upload, XCircle, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Upload, XCircle, FileText, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
+  const [dragOver, setDragOver] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -32,16 +33,19 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
+    setDragOver(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setDragOver(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setDragOver(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const filesArray = Array.from(e.dataTransfer.files);
@@ -90,20 +94,24 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
     <Dialog open={isOpen} onOpenChange={() => !isUploading && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Upload Documents</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <Upload className="h-5 w-5 text-rag-blue" />
+            Upload Documents
+          </DialogTitle>
         </DialogHeader>
         
         <div 
           className={`
-            mt-4 border-2 border-dashed rounded-lg p-8 text-center transition-all
-            ${isDragging ? 'border-rag-blue bg-rag-blue/5' : 'border-gray-300'}
+            mt-4 border-2 border-dashed rounded-lg p-8 text-center transition-all 
+            ${isDragging ? 'border-rag-blue bg-rag-blue/5 shadow-inner' : 'border-gray-300'}
+            ${dragOver ? 'scale-105 border-rag-blue bg-rag-blue/5' : ''}
           `}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className={`mx-auto h-16 w-16 rounded-full ${isDragging ? 'bg-rag-blue/10' : 'bg-gray-100'} flex items-center justify-center mb-4`}>
-            <Upload className={`h-8 w-8 ${isDragging ? 'text-rag-blue' : 'text-gray-400'}`} />
+          <div className={`mx-auto h-16 w-16 rounded-full ${isDragging ? 'bg-rag-blue/10' : 'bg-gray-100'} flex items-center justify-center mb-4 transition-colors`}>
+            <Upload className={`h-8 w-8 ${isDragging ? 'text-rag-blue animate-bounce' : 'text-gray-400'}`} />
           </div>
           <p className="mt-2 text-sm font-medium text-gray-900">
             {isDragging ? 'Drop files here' : 'Drag and drop files here'}
@@ -126,14 +134,15 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
             asChild
             disabled={isUploading}
           >
-            <label htmlFor="file-upload">Browse Files</label>
+            <label htmlFor="file-upload" className="cursor-pointer">Browse Files</label>
           </Button>
         </div>
 
         {selectedFiles.length > 0 && (
-          <div className="mt-4">
+          <div className="mt-4 animate-fade-in">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                <Info className="h-4 w-4 text-rag-blue" />
                 Selected Files ({selectedFiles.length})
               </p>
               {selectedFiles.length > 0 && (
@@ -148,18 +157,18 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
                 </Button>
               )}
             </div>
-            <div className="max-h-48 overflow-auto rounded-md border border-gray-200">
+            <div className="max-h-48 overflow-auto rounded-md border border-gray-200 bg-white shadow-inner">
               <ul className="divide-y divide-gray-200">
                 {selectedFiles.map((file, index) => {
                   const sizeInKB = (file.size / 1024).toFixed(0);
                   const isLarge = file.size > 5 * 1024 * 1024; // 5MB
                   
                   return (
-                    <li key={index} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                    <li key={index} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
                       <div className="flex items-center space-x-3 max-w-[80%]">
                         {getFileIcon(file.name)}
                         <div className="flex flex-col">
-                          <span className="text-sm truncate max-w-[15rem]">{file.name}</span>
+                          <span className="text-sm truncate max-w-[15rem] font-medium">{file.name}</span>
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs text-gray-500">{sizeInKB} KB</span>
                             {isLarge && (
@@ -174,7 +183,7 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
                       <button 
                         onClick={() => removeFile(file.name)}
                         disabled={isUploading}
-                        className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50"
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors"
                         title="Remove file"
                       >
                         <XCircle className="h-5 w-5" />
@@ -199,7 +208,7 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
           <Button 
             onClick={handleUpload}
             disabled={selectedFiles.length === 0 || isUploading}
-            className="bg-gradient-to-r from-rag-blue to-rag-dark-blue hover:from-rag-dark-blue hover:to-rag-dark-blue"
+            className="bg-gradient-to-r from-rag-blue to-rag-dark-blue hover:from-rag-dark-blue hover:to-rag-dark-blue transition-all"
           >
             {isUploading ? (
               <>
