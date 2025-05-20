@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils';
 
 const LoadingDots: React.FC = () => {
   return (
-    <div className="flex items-center space-x-1.5">
-      <div className="h-2.5 w-2.5 rounded-full bg-rag-blue animate-bounce [animation-delay:0ms] shadow-sm" />
-      <div className="h-2.5 w-2.5 rounded-full bg-rag-blue animate-bounce [animation-delay:200ms] shadow-sm" />
-      <div className="h-2.5 w-2.5 rounded-full bg-rag-blue animate-bounce [animation-delay:400ms] shadow-sm" />
+    <div className="flex items-center space-x-2">
+      <div className="h-3 w-3 rounded-full bg-gradient-to-r from-rag-blue to-rag-dark-blue animate-pulse [animation-delay:0ms] shadow-md" />
+      <div className="h-3 w-3 rounded-full bg-gradient-to-r from-rag-blue to-rag-dark-blue animate-pulse [animation-delay:200ms] shadow-md" />
+      <div className="h-3 w-3 rounded-full bg-gradient-to-r from-rag-blue to-rag-dark-blue animate-pulse [animation-delay:400ms] shadow-md" />
     </div>
   );
 };

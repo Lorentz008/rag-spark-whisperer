@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Upload, XCircle, FileText } from 'lucide-react';
+import { Upload, XCircle, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
@@ -65,26 +65,48 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
 
     onUpload(selectedFiles);
   };
+  
+  const getFileIcon = (filename: string) => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    
+    switch(ext) {
+      case 'pdf':
+        return <FileText className="h-4 w-4 text-red-500" />;
+      case 'doc':
+      case 'docx':
+        return <FileText className="h-4 w-4 text-blue-500" />;
+      case 'txt':
+        return <FileText className="h-4 w-4 text-gray-500" />;
+      case 'csv':
+        return <FileText className="h-4 w-4 text-green-500" />;
+      case 'json':
+        return <FileText className="h-4 w-4 text-amber-500" />;
+      default:
+        return <FileText className="h-4 w-4 text-gray-400" />;
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={() => !isUploading && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Documents</DialogTitle>
+          <DialogTitle className="text-xl font-bold">Upload Documents</DialogTitle>
         </DialogHeader>
         
         <div 
           className={`
-            mt-4 border-2 border-dashed rounded-lg p-6 text-center
-            ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
+            mt-4 border-2 border-dashed rounded-lg p-8 text-center transition-all
+            ${isDragging ? 'border-rag-blue bg-rag-blue/5' : 'border-gray-300'}
           `}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+          <div className={`mx-auto h-16 w-16 rounded-full ${isDragging ? 'bg-rag-blue/10' : 'bg-gray-100'} flex items-center justify-center mb-4`}>
+            <Upload className={`h-8 w-8 ${isDragging ? 'text-rag-blue' : 'text-gray-400'}`} />
+          </div>
           <p className="mt-2 text-sm font-medium text-gray-900">
-            Drag and drop files here
+            {isDragging ? 'Drop files here' : 'Drag and drop files here'}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             Supports: TXT, PDF, DOCX, CSV, JSON (Max 10MB)
@@ -100,52 +122,96 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="mt-4"
+            className="mt-4 border-rag-blue/30 text-rag-blue hover:bg-rag-blue/10"
             asChild
             disabled={isUploading}
           >
-            <label htmlFor="file-upload">Select Files</label>
+            <label htmlFor="file-upload">Browse Files</label>
           </Button>
         </div>
 
         {selectedFiles.length > 0 && (
           <div className="mt-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">
-              Selected Files ({selectedFiles.length})
-            </p>
-            <div className="max-h-40 overflow-auto rounded border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-gray-700">
+                Selected Files ({selectedFiles.length})
+              </p>
+              {selectedFiles.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs text-gray-500 hover:text-red-500"
+                  onClick={() => setSelectedFiles([])}
+                  disabled={isUploading}
+                >
+                  Clear all
+                </Button>
+              )}
+            </div>
+            <div className="max-h-48 overflow-auto rounded-md border border-gray-200">
               <ul className="divide-y divide-gray-200">
-                {selectedFiles.map((file, index) => (
-                  <li key={index} className="px-3 py-2 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm truncate max-w-[12rem]">{file.name}</span>
-                      <span className="text-xs text-gray-500">{(file.size / 1024).toFixed(0)}KB</span>
-                    </div>
-                    <button 
-                      onClick={() => removeFile(file.name)}
-                      disabled={isUploading}
-                      className="text-gray-400 hover:text-red-500"
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
+                {selectedFiles.map((file, index) => {
+                  const sizeInKB = (file.size / 1024).toFixed(0);
+                  const isLarge = file.size > 5 * 1024 * 1024; // 5MB
+                  
+                  return (
+                    <li key={index} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                      <div className="flex items-center space-x-3 max-w-[80%]">
+                        {getFileIcon(file.name)}
+                        <div className="flex flex-col">
+                          <span className="text-sm truncate max-w-[15rem]">{file.name}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-gray-500">{sizeInKB} KB</span>
+                            {isLarge && (
+                              <span className="flex items-center text-xs text-amber-600 gap-0.5">
+                                <AlertTriangle className="h-3 w-3" />
+                                Large file
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => removeFile(file.name)}
+                        disabled={isUploading}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50"
+                        title="Remove file"
+                      >
+                        <XCircle className="h-5 w-5" />
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
         )}
 
-        <div className="mt-4 flex justify-end space-x-2">
-          <Button variant="outline" onClick={onClose} disabled={isUploading}>
+        <div className="mt-5 flex justify-end space-x-3">
+          <Button 
+            variant="outline" 
+            onClick={onClose} 
+            disabled={isUploading}
+            className="border-gray-300"
+          >
             Cancel
           </Button>
           <Button 
             onClick={handleUpload}
             disabled={selectedFiles.length === 0 || isUploading}
-            className="bg-rag-blue hover:bg-rag-dark-blue"
+            className="bg-gradient-to-r from-rag-blue to-rag-dark-blue hover:from-rag-dark-blue hover:to-rag-dark-blue"
           >
-            {isUploading ? 'Processing...' : 'Upload and Process'}
+            {isUploading ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                Processing...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Upload {selectedFiles.length > 0 && `(${selectedFiles.length})`}
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>
